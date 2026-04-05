@@ -1,0 +1,37 @@
+# catmux configuration - Elecraft KX3
+# The KX3 uses Kenwood-heritage CAT (semicolon terminated) like the K3/K3S/KX2/K4
+
+[rig]
+family  = "elecraft"       # Elecraft uses Kenwood-heritage semicolon protocol
+port    = "/dev/ttyUSB0"   # or /dev/ttyS0 if using the KX3's 3.5mm serial jack
+baud    = 38400            # KX3 supports up to 38400; set in KX3 CONFIG > RS232
+mirror_ttl       = 2.0
+response_timeout = 0.5
+rts_on_connect   = false   # KX3 does not need RTS asserted for CAT
+serial_group = "dialout"   # uucp on Arch/Manjaro, dialout on Debian/Ubuntu/Fedora/RHEL/CentOS
+
+# PTT and CW keying on KX3:
+#   - RTS -> PTT  (configurable in KX3 CONFIG > PTT-KEY)
+#   - DTR -> CW key (same menu)
+# catmux forwards RTS/DTR from virtual ports to the real serial port automatically.
+# NOTE: Do NOT have your KX3 in the PTT-KEY menu when catmux starts — it will
+# enter TEST mode if RTS/DTR is asserted. Enable PTT-KEY AFTER catmux connects.
+
+[vports]
+symlink_dir = "/dev/catmux"
+
+  [[vports.ports]]
+  name     = "wsjt-x"
+  priority = 10
+
+  [[vports.ports]]
+  name     = "logger"
+  priority = 15
+
+  [[vports.ports]]
+  name     = "fldigi"
+  priority = 10
+
+[log]
+level = "INFO"
+file  = ""

@@ -1,0 +1,56 @@
+# catmux configuration - Yaesu FT-991A
+# Copy to catmux.toml and edit for your setup
+
+[rig]
+family  = "yaesu"          # yaesu | kenwood | elecraft | icom
+port    = "/dev/ttyUSB0"   # your CAT port (check: ls /dev/serial/by-id/)
+baud    = 38400            # must match radio Menu > CAT RATE setting
+mirror_ttl       = 2.0     # seconds before mirror values go stale
+response_timeout = 0.5     # seconds to wait for radio GET response
+set_timeout      = 0.1     # SETs are silent on Yaesu — short timeout
+rts_on_connect   = true    # FT-991A REQUIRES RTS asserted for USB CAT
+serial_group = "dialout"   # uucp on Arch/Manjaro, dialout on Debian/Ubuntu/Fedora/RHEL/CentOS
+
+[vports]
+symlink_dir = "/dev/catmux"   # where virtual port symlinks appear
+
+  # Port 0 — primary app (e.g. WSJT-X, full priority)
+  # ptt_from: which line the APP asserts for PTT  (rts | dtr)
+  # ptt_via:  how catmux sends PTT to the radio   (rts | dtr | cat)
+  [[vports.ports]]
+  name     = "wsjt-x"
+  priority = 10
+  ptt_from = "rts"    # WSJT-X uses RTS for PTT by default
+  ptt_via  = "rts"    # FT-991A accepts RTS for PTT
+
+  # Port 1 — logger
+  [[vports.ports]]
+  name     = "logger"
+  priority = 15
+  ptt_from = "rts"
+  ptt_via  = "rts"
+
+  # Port 2 — Fldigi / digital mode app
+  [[vports.ports]]
+  name     = "fldigi"
+  priority = 10
+  ptt_from = "rts"
+  ptt_via  = "cat"    # use CAT TX1;/TX0; instead of hardware RTS
+
+  # Port 3 — Direwolf / WinAPRS / software TNC (uses DTR for PTT)
+  [[vports.ports]]
+  name     = "direwolf"
+  priority = 10
+  ptt_from = "dtr"    # Direwolf asserts DTR for PTT
+  ptt_via  = "cat"    # translate to CAT TX1;/TX0;
+
+  # Port 4 — LinBPQ
+  [[vports.ports]]
+  name     = "linbpq"
+  priority = 20
+  ptt_from = "rts"
+  ptt_via  = "rts"
+
+[log]
+level = "INFO"    # DEBUG | INFO | WARNING | ERROR
+file  = ""        # leave empty to log to stdout only

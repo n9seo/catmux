@@ -1,0 +1,19 @@
+# /etc/systemd/system/tty0tty.service
+# Loads the tty0tty null-modem kernel module and sets permissions
+# Install: sudo cp tty0tty.service /etc/systemd/system/
+#          sudo systemctl enable tty0tty
+#          sudo systemctl start tty0tty
+
+[Unit]
+Description=tty0tty null-modem kernel module
+After=systemd-modules-load.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/modprobe tty0tty
+ExecStart=/bin/chmod a+rw /dev/tnt0 /dev/tnt1 /dev/tnt2 /dev/tnt3 /dev/tnt4 /dev/tnt5 /dev/tnt6 /dev/tnt7
+ExecStop=/sbin/rmmod tty0tty
+
+[Install]
+WantedBy=multi-user.target

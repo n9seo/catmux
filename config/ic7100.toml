@@ -1,0 +1,53 @@
+# catmux configuration - Icom IC-7100
+#
+# IMPORTANT differences from Yaesu/Elecraft:
+#
+# 1. Protocol: CI-V binary (NOT ASCII semicolons)
+#    Frames: FE FE <addr> <ctrl> <cmd> [data] FD
+#
+# 2. PTT/Keying: The IC-7100's USB serial port IGNORES RTS and DTR.
+#    The chip pins are physically unconnected in the IC-7100 firmware.
+#    catmux translates RTS changes from virtual ports into CI-V PTT
+#    commands (0x1C 0x00 0x01 for TX, 0x1C 0x00 0x00 for RX) automatically.
+#    Your apps should still assert RTS for PTT as normal — catmux handles the
+#    translation transparently.
+#
+# 3. CI-V address: The IC-7100 default address is 0x88.
+#    Check your radio: Menu > CI-V Address. If you changed it, update below.
+#
+# 4. Echo: CI-V is a bus protocol and the radio echoes every byte received.
+#    catmux's CI-V framer handles echo suppression automatically.
+#
+# 5. Two USB ports:
+#    /dev/ttyUSB0 = CI-V rig control  <-- use this one
+#    /dev/ttyUSB1 = RTTY/D-Star/GPS data port  <-- NOT for CAT
+
+[rig]
+family           = "icom"
+port             = "/dev/ttyUSB0"
+baud             = 19200          # IC-7100 default CI-V baud; check Menu > CI-V Baud Rate
+civ_address      = "0x88"        # IC-7100 default; change if you customised it
+civ_ctrl_address = "0xE0"        # controller address (catmux); any unused CI-V address
+mirror_ttl       = 2.0
+response_timeout = 1.0           # CI-V is slower; give it a full second
+rts_on_connect   = false         # irrelevant for IC-7100
+serial_group = "dialout"   # uucp on Arch/Manjaro, dialout on Debian/Ubuntu/Fedora/RHEL/CentOS
+
+[vports]
+symlink_dir = "/dev/catmux"
+
+  [[vports.ports]]
+  name     = "wsjt-x"
+  priority = 10
+
+  [[vports.ports]]
+  name     = "logger"
+  priority = 15
+
+  [[vports.ports]]
+  name     = "fldigi"
+  priority = 10
+
+[log]
+level = "INFO"
+file  = ""

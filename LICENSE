@@ -1,0 +1,83 @@
+CATMUX AMATEUR RADIO LICENSE
+Version 1.0
+
+Copyright (c) 2026 Kayne Kruse N9SEO
+
+PREAMBLE
+
+This software was written by and for the amateur radio community.
+It is provided freely for amateur radio use and non-commercial purposes.
+The authors wish to ensure it remains available to the ham radio community
+without being exploited for commercial gain.
+
+TERMS AND CONDITIONS
+
+1. PERMITTED USE
+
+   You are free to:
+   - Use, copy, modify, and distribute this software for amateur radio
+     purposes, personal use, educational use, and non-commercial research.
+   - Use this software in amateur radio clubs, nets, emergency communication
+     groups (ARES, RACES, CERT, etc.), and similar non-commercial organizations.
+   - Include this software in non-commercial amateur radio projects and
+     open source amateur radio software distributions.
+
+2. PROHIBITED USE
+
+   You may NOT:
+   - Use this software, or any derivative work, for commercial purposes.
+     Commercial purposes means any use intended for or resulting in commercial
+     advantage or monetary compensation, including but not limited to:
+     * Selling or licensing this software or derivatives
+     * Using this software as part of a commercial product or service
+     * Using this software to provide paid services to others
+   - Remove or alter this license or the copyright notice.
+   - Misrepresent the origin of this software.
+
+3. REDISTRIBUTION
+
+   Redistribution of this software, with or without modification, is
+   permitted provided that:
+   - This license is included unmodified with all distributions.
+   - The copyright notice is retained.
+   - Redistributions are not for commercial purposes (see section 2).
+   - Modified versions are clearly marked as such and do not misrepresent
+     the original software.
+
+4. AMATEUR RADIO DEFINITION
+
+   For the purposes of this license, "amateur radio purposes" includes any
+   use related to the Amateur Radio Service as defined by the ITU Radio
+   Regulations and national telecommunications authorities (FCC Part 97,
+   Ofcom, BNetzA, etc.), including but not limited to:
+   - Rig control and automation
+   - Digital mode operation
+   - Logging and contesting
+   - Emergency communications
+   - Experimentation and technical education
+   - Satellite and weak signal communication
+
+5. DISCLAIMER
+
+   THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+   CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+6. ENFORCEMENT
+
+   Any use of this software in violation of these terms automatically
+   terminates your rights under this license. The authors reserve the
+   right to pursue remedies available under applicable copyright law.
+
+---
+
+For commercial licensing inquiries, contact the project maintainers.
+The authors are happy to discuss licensing arrangements that support
+the amateur radio community.
+
+73 de N9SEO
+

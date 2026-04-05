@@ -1,0 +1,35 @@
+# /etc/systemd/system/catmux.service
+# Starts catmux CAT serial multiplexer
+# Install: sudo cp catmux.service /etc/systemd/system/
+#          edit User= and WorkingDirectory= and ExecStart= below
+#          sudo systemctl enable catmux
+#          sudo systemctl start catmux
+
+[Unit]
+Description=catmux CAT serial multiplexer
+# Wait for tty0tty if you use it, and for USB serial devices to settle
+After=tty0tty.service systemd-udev-settle.service
+Wants=tty0tty.service
+
+[Service]
+Type=simple
+
+# --- EDIT THESE ---
+User=n0call
+WorkingDirectory=/home/n0call/code/catmux
+ExecStart=/home/n0call/.pyenv/versions/catmux/bin/python3 catmux_main.py --config catmux.toml
+# ------------------
+
+Restart=on-failure
+RestartSec=5
+
+# Give USB serial devices time to appear after boot
+ExecStartPre=/bin/sleep 3
+
+# Log to journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=catmux
+
+[Install]
+WantedBy=multi-user.target
