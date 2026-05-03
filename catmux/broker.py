@@ -452,10 +452,10 @@ class Broker:
             # GETs always expect a response. SETs on Yaesu are silent —
             # the radio accepts them without sending anything back.
             # Use a short timeout for SETs to avoid blocking the queue.
-            is_set = not cmd.is_get
-            timeout = float(self.rig_cfg.get("response_timeout", 0.5))
+            is_set  = not cmd.is_get
+            timeout = float(self.rig_cfg.get("response_timeout", 0.2))
             if is_set:
-                timeout = float(self.rig_cfg.get("set_timeout", 0.1))
+                timeout = float(self.rig_cfg.get("set_timeout", 0.05))
 
             with self._inflight_lock:
                 self._pending_origin = cmd.origin
@@ -548,16 +548,23 @@ class Broker:
             is_get = self.framer.is_get(frame)
             key    = self.framer.command_key(frame)
 
-            # --- CAT PTT: bypass queue, write directly -------------------
+            # --- CAT PTT: preempt any in-flight transaction --------------
             # Covers all rig families:
             #   Yaesu:    TX0; TX1; TX2;  (TX0=RX, TX1=CAT TX, TX2=MIC TX)
             #   Kenwood:  TX; RX;
             #   Elecraft: TX; RX; TQ;
             if self._is_ptt_command(key, frame, is_get):
-                log.info(f"[{vp.name}] CAT PTT: {_fmt(frame)} — direct write")
+                log.info(f"[{vp.name}] CAT PTT: {_fmt(frame)} — preempting")
+                # Abort any in-flight transaction so the dispatcher releases
+                # the write lock immediately rather than waiting for a response
+                with self._inflight_lock:
+                    if self._inflight:
+                        self._response_event.set()  # unblock dispatcher now
+                # Write PTT directly — no queue, no waiting
                 try:
                     with self._write_lock:
                         self.serial.write(frame)
+                        log.debug(f"PTT -> Radio: {_fmt(frame)}")
                     # Still need to read and route the response
                     # Enqueue as PRI_PTT so response handling stays in order
                     self._enqueue(
