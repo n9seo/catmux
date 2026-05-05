@@ -53,7 +53,7 @@ fi
 
 # Generate catmux.service from template with correct paths
 sed \
-    -e "s|User=fury|User=$USER|g" \
+    -e "s|User=n0call|User=$USER|g" \
     -e "s|WorkingDirectory=.*|WorkingDirectory=$CATMUX_DIR|g" \
     -e "s|ExecStart=.*python3|ExecStart=$PYTHON_BIN|g" \
     "$CATMUX_DIR/systemd/catmux.service" | sudo tee /etc/systemd/system/catmux.service > /dev/null
