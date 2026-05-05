@@ -138,9 +138,10 @@ class Broker:
         # _response_event: set by serial_reader when any frame arrives
         self._pending_origin:  Optional[VPort] = None
         self._pending_key:     Optional[str]   = None
+        self._pending_frame:   Optional[bytes] = None
         self._inflight:        bool            = False
         self._response_event   = threading.Event()
-        self._inflight_lock    = threading.Lock()   # guards _pending_* and _inflight
+        self._inflight_lock    = threading.Lock()
 
         # ---- Running state -----------------------------------------------
         self._running  = False
@@ -378,13 +379,24 @@ class Broker:
 
                     # Route to waiting dispatcher, or broadcast if unsolicited
                     with self._inflight_lock:
-                        inflight = self._inflight
-                        waiting  = self._pending_origin
+                        inflight       = self._inflight
+                        waiting        = self._pending_origin
+                        pending_key    = self._pending_key
+                        pending_frame  = getattr(self, '_pending_frame', None)
 
                     if inflight:
                         # A command is in-flight — this frame is its response.
-                        # Send to the originating vport if there is one,
-                        # then signal the dispatcher to unblock.
+                        # Special case: if the radio echoed back our SET command
+                        # verbatim (e.g. MD0C; echoed after we sent MD0C;),
+                        # consume it silently and keep waiting for any additional
+                        # response rather than routing it to the waiting vport.
+                        if (pending_frame is not None
+                                and frame == pending_frame
+                                and waiting is None):
+                            log.debug(f"Consumed SET echo: {_fmt(frame)}")
+                            # Don't set response_event — let set_timeout expire
+                            continue
+
                         if waiting is not None:
                             waiting.send_to_app(frame)
                         self._response_event.set()
@@ -460,6 +472,7 @@ class Broker:
             with self._inflight_lock:
                 self._pending_origin = cmd.origin
                 self._pending_key    = cmd.key
+                self._pending_frame  = cmd.frame
                 self._inflight       = True
                 self._response_event.clear()
 
@@ -472,6 +485,7 @@ class Broker:
                 with self._inflight_lock:
                     self._pending_origin = None
                     self._pending_key    = None
+                    self._pending_frame  = None
                     self._inflight       = False
                 continue
 
@@ -490,6 +504,7 @@ class Broker:
             with self._inflight_lock:
                 self._pending_origin = None
                 self._pending_key    = None
+                self._pending_frame  = None
                 self._inflight       = False
 
     # ------------------------------------------------------------------
@@ -583,6 +598,13 @@ class Broker:
                 priority = PRI_GET_APP
             else:
                 priority = PRI_SET
+                # Invalidate mirror for keys affected by this SET so other
+                # apps get fresh values immediately rather than stale cache.
+                # e.g. WSJT-X sets FB (split freq) — logger should see new value.
+                if key in self._SET_INVALIDATES:
+                    for stale_key in self._SET_INVALIDATES[key]:
+                        self.mirror.mark_stale(stale_key)
+                        log.debug(f"Mirror invalidated '{stale_key}' after SET {key}")
 
             # Respect per-vport priority for normal commands
             priority = max(priority, vp.priority) if is_get else min(priority, PRI_SET)
@@ -601,6 +623,17 @@ class Broker:
         "TQ",   # Elecraft TX status / PTT
         "RX",   # Kenwood/Elecraft explicit RX command
     })
+
+    # When a SET arrives for these keys, also mark related mirror keys stale
+    # so other apps polling them get fresh values from the radio immediately.
+    _SET_INVALIDATES: dict[str, list[str]] = {
+        "FA": ["FA", "IF"],         # VFO-A freq change
+        "FB": ["FB", "IF"],         # VFO-B / split freq change
+        "FT": ["FT", "IF"],         # split mode change
+        "PC": ["PC"],               # power change
+        "SL": ["SL", "IF"],         # filter change
+        "SH": ["SH", "IF"],
+    }
 
     def _is_ptt_command(self, key: str | None, frame: bytes, is_get: bool) -> bool:
         """

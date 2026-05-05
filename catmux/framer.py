@@ -105,15 +105,36 @@ class SemicolonFramer(BaseFramer):
                 frames.append(frame)
         return frames
 
+    # Yaesu commands that take a single VFO digit as part of a GET query.
+    # e.g. MD0; = "get mode for VFO-A", MD1; = "get mode for VFO-B"
+    # These look like SETs (have a digit payload) but are actually GETs.
+    _YAESU_VFO_GETS = frozenset({
+        "MD",   # MD0; = get VFO-A mode, MD1; = get VFO-B mode
+        "FA",   # FA0; sometimes used
+        "FB",   # FB1; sometimes used
+        "BY",   # BY0; / BY1; busy status per VFO
+        "DC",   # DC0; / DC1;
+    })
+
     def is_get(self, frame: bytes) -> bool:
         """
         A GET is the bare command name followed immediately by ';'.
         Examples: FA;  MD;  IF;  BW;  BW$;
-        We allow optional whitespace for resilience.
+
+        Special case: Yaesu VFO-parameter queries like MD0; MD1; look like
+        SETs (they have a digit) but are actually GETs — the digit selects
+        which VFO to query, not a value to set. We detect these by checking
+        if the payload is a single digit and the command is in the known list.
         """
         s = frame.decode("ascii", errors="replace").strip().rstrip(";").strip()
-        # A GET has no numeric/data payload — just the command letters (and maybe $)
-        return bool(re.fullmatch(r"[A-Za-z]{2,4}[$]?", s))
+        # Plain GET: just command letters
+        if re.fullmatch(r"[A-Za-z]{2,4}[$]?", s):
+            return True
+        # Yaesu VFO-parameter GET: command letters + single digit
+        m = re.fullmatch(r"([A-Za-z]{2,4})([\d])", s)
+        if m and m.group(1).upper() in self._YAESU_VFO_GETS:
+            return True
+        return False
 
     def command_key(self, frame: bytes) -> str | None:
         try:
